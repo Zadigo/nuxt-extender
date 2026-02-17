@@ -3,6 +3,8 @@ import { addDoc, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'f
 import { useDocument, useFirestore } from 'vuefire'
 import type { MaybeEmpty, Nullable } from '~/types'
 
+type SuccessCallbacks<T extends () => unknown> = T extends () => infer R ? R : never
+
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
  * to track a user session for an application
@@ -11,7 +13,8 @@ import type { MaybeEmpty, Nullable } from '~/types'
  * The session ID will be stored in session storage under the key 'blindtestId' and can be accessed by other composables like 
  * `useSession` to manage the session data.
  */
-export function useCreateSession<T extends Record<string, unknown>>(defaultData: T) {
+// successCallbacks?: F[]
+export function useCreateSession<T extends Record<string, unknown>, F extends SuccessCallbacks<() => unknown>>(defaultData: T) {
   if (import.meta.server) {
     return {
       create: async () => { }
@@ -29,6 +32,20 @@ export function useCreateSession<T extends Record<string, unknown>>(defaultData:
         await promiseTimeout(800) // Wait a bit to ensure Firestore is ready
 
         sessionId.value = data.id
+
+        // if (successCallbacks) {
+        //   useAsyncQueue(successCallbacks?.map((callback) => {
+        //     if (callback instanceof Function) {
+        //       return async () => {
+        //         try {
+        //           await callback()
+        //         } catch (error) {
+        //           console.error('Error executing success callback:', error)
+        //         }
+        //       }
+        //     }
+        //   }))
+        // }
       } catch (error) {
         throw new Error('Error creating blindtest session:' + error)
       }
