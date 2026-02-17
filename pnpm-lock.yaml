@@ -63,6 +63,9 @@ importers:
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
+      nuxt-vuefire:
+        specifier: ^1.1.0
+        version: 1.1.0(@firebase/app-types@0.9.3)(firebase-admin@13.6.1)(firebase-functions@7.0.5(firebase-admin@13.6.1))(firebase@12.9.0)(magicast@0.5.2)(vuefire@3.2.2(consola@3.4.2)(firebase@12.9.0)(vue@3.5.28))
       playwright-core:
         specifier: ^1.58.2
         version: 1.58.2
@@ -1381,6 +1384,10 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
+
+  '@posva/lru-cache@10.0.1':
+    resolution: {integrity: sha512-8rksr4MD7zNltsgerU9sx3OfOo8l9lABXf8/tII6XijgvTqFO+e+P+cSyfSQhAPgi458LMx75kUTLX3Zxwdc+g==}
+    engines: {node: 14 || >=16.14}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -3257,6 +3264,9 @@ packages:
     resolution: {integrity: sha512-arhlxbFRmoQHl33a0Zkle/YWlmNwoyt6QNZEIJcqNbdrsix5Lvc4HyyI3EnwxTYlZYc32EbYrQ8SzEZ7dqgg9A==}
     engines: {node: '>=14'}
 
+  lodash-es@4.17.23:
+    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
+
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
 
@@ -3533,6 +3543,22 @@ packages:
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
+
+  nuxt-vuefire@1.1.0:
+    resolution: {integrity: sha512-Sotrsw94+MvxyI5RQMAkgEbxlSIMUTJILEBOSgvNq/qFSCwzKPLA/Kx7PRCgbcReUffrRklbNbOtXZeSqrxoIg==}
+    peerDependencies:
+      '@firebase/app-types': '>=0.8.1'
+      firebase: ^9.0.0 || ^10.0.0 || ^11.1.0 || ^12.0.0
+      firebase-admin: ^11.3.0 || ^12.2.0 || ^13.0.1
+      firebase-functions: ^4.1.0 || ^5.0.0 || ^6.1.2
+      vuefire: '>=3.2.2'
+    peerDependenciesMeta:
+      '@firebase/app-types':
+        optional: true
+      firebase-admin:
+        optional: true
+      firebase-functions:
+        optional: true
 
   nuxt@4.3.1:
     resolution: {integrity: sha512-bl+0rFcT5Ax16aiWFBFPyWcsTob19NTZaDL5P6t0MQdK63AtgS6fN6fwvwdbXtnTk6/YdCzlmuLzXhSM22h0OA==}
@@ -4247,6 +4273,10 @@ packages:
   strip-final-newline@3.0.0:
     resolution: {integrity: sha512-dOESqjYr96iWYylGObzd39EuNTa5VJxyvVAEm5Jnh7KGo75V43Hk1odPQkNDyXNmUR6k+gEiDVXnjB8HJ3crXw==}
     engines: {node: '>=12'}
+
+  strip-json-comments@5.0.3:
+    resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
+    engines: {node: '>=14.16'}
 
   strip-literal@3.1.0:
     resolution: {integrity: sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg==}
@@ -6342,6 +6372,8 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
+
+  '@posva/lru-cache@10.0.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -8451,6 +8483,8 @@ snapshots:
       pkg-types: 2.3.0
       quansync: 0.2.11
 
+  lodash-es@4.17.23: {}
+
   lodash.camelcase@4.3.0: {}
 
   lodash.clonedeep@4.5.0: {}
@@ -8759,6 +8793,21 @@ snapshots:
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
+
+  nuxt-vuefire@1.1.0(@firebase/app-types@0.9.3)(firebase-admin@13.6.1)(firebase-functions@7.0.5(firebase-admin@13.6.1))(firebase@12.9.0)(magicast@0.5.2)(vuefire@3.2.2(consola@3.4.2)(firebase@12.9.0)(vue@3.5.28)):
+    dependencies:
+      '@nuxt/kit': 3.21.1(magicast@0.5.2)
+      '@posva/lru-cache': 10.0.1
+      firebase: 12.9.0
+      lodash-es: 4.17.23
+      strip-json-comments: 5.0.3
+      vuefire: 3.2.2(consola@3.4.2)(firebase@12.9.0)(vue@3.5.28)
+    optionalDependencies:
+      '@firebase/app-types': 0.9.3
+      firebase-admin: 13.6.1
+      firebase-functions: 7.0.5(firebase-admin@13.6.1)
+    transitivePeerDependencies:
+      - magicast
 
   nuxt@4.3.1(@parcel/watcher@2.5.6)(@types/node@25.2.3)(@vue/compiler-sfc@3.5.28)(cac@6.7.14)(db0@0.3.4)(ioredis@5.9.3)(magicast@0.5.2)(rollup@4.57.1)(terser@5.46.0)(vite@7.3.1(@types/node@25.2.3)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))(yaml@2.8.2):
     dependencies:
@@ -9699,6 +9748,8 @@ snapshots:
       ansi-regex: 6.2.2
 
   strip-final-newline@3.0.0: {}
+
+  strip-json-comments@5.0.3: {}
 
   strip-literal@3.1.0:
     dependencies:

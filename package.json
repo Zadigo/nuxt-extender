@@ -33,6 +33,7 @@
     "firebase-functions": "^7.0.5",
     "happy-dom": "^20.6.1",
     "jsdom": "^28.1.0",
+    "nuxt-vuefire": "^1.1.0",
     "playwright-core": "^1.58.2",
     "vitest": "^4.0.18",
     "vuefire": "^3.2.2"

@@ -1,16 +1,8 @@
 import { promiseTimeout } from '@vueuse/core'
 import { addDoc, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { useDocument, useFirestore } from 'vuefire'
-import type { MaybeEmpty, Nullable } from '~/types'
+import type { MaybeEmpty, Nullable, SessionData, Undefineable } from '~/types'
 
-type SessionData = { [key: string]: unknown }
-
-type CreateOptions<D extends SessionData = SessionData> = {
-  name: string
-  data: D
-}
-
-const SESSION_ID_NAME = 'nuxtAppSessionName'
 
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
@@ -20,41 +12,38 @@ const SESSION_ID_NAME = 'nuxtAppSessionName'
  * @param options - The options to initialize the session with. This includes the name of the session and the default data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<D extends SessionData = SessionData>(options: CreateOptions<D>) {
+export function useCreateSession<D extends SessionData = SessionData>() {
   if (import.meta.server) {
     return {
       create: async () => { }
     }
   }
 
+  const appConfig = useAppConfig()
+
   const fireStore = useFirestore()
-  const sessionIdName = useSessionStorage<string>(SESSION_ID_NAME, options.name)
-  const sessionId = useSessionStorage<Nullable<string>>(options.name, null)
+  const sessionId = useSessionStorage<Nullable<string>>(appConfig.sessions.name, null)
 
   async function create() {
     if (!isDefined(sessionId)) {
       try {
-        const collectionRef = collection(fireStore, options.name)
-        const data = await addDoc(collectionRef, { ...options.data })
+        const collectionRef = collection(fireStore, appConfig.sessions.collectionName)
+        
+        const data = await addDoc(collectionRef, { ...appConfig.sessions.initial })
         await promiseTimeout(800) // Wait a bit to ensure Firestore is ready
         
         sessionId.value = data.id
       } catch (error) {
-        throw new Error(`Error creating ${options.name} session:` + error)
+        throw new Error(`Error creating ${appConfig.sessions.name} session:` + error)
       }
     }
   }
 
   return {
     /**
-     * The name of the session, which is also used as the 
-     * key in session storage to store the session ID.
-     */
-    sessionIdName,
-    /**
      * Creates a new session in Firestore with the provided options. 
      * The session ID will be stored in session storage under the key provided in
-     * `options.name`.
+     * `appConfig.sessions.name`.
      */
     create
   }
@@ -66,7 +55,7 @@ export function useCreateSession<D extends SessionData = SessionData>(options: C
  * can be considered as a game instance where players can join and participate
  * in a blindtest
  */
-export const useSession = createGlobalState(<T extends SessionData = SessionData>(defaultData: T, sessionIdName: string = 'sessionId') => {
+export const useSession = createGlobalState(<T extends SessionData = SessionData>(defaultData: T, sessionIdName: Undefineable<string> = undefined) => {
   const error = ref<Nullable<string>>(null)
   const isSyncing = ref(false)
   const isLoading = ref(false)
@@ -88,8 +77,10 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
     }
   }
 
-  const _sessionIdName = useSessionStorage<string>(SESSION_ID_NAME, sessionIdName)
-  const sessionId = useSessionStorage<Nullable<string>>(_sessionIdName.value, null)
+  const appConfig = useAppConfig()
+  console.log('Using session ID name:', appConfig.sessions.name)
+
+  const sessionId = useSessionStorage<Nullable<string>>(appConfig.sessions.name, null)
   const hasExistingSession = computed(() => isDefined(sessionId))
 
   const firestore = useFirestore()

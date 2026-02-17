@@ -1,4 +1,5 @@
 export type * from './graphql'
+export type * from './sessions'
 
 export type Arrayable<T> = T[]
 

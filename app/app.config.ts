@@ -64,5 +64,12 @@ export default defineAppConfig({
         handle: '@nuxtjs'
       }
     }
+  },
+  sessions: {
+    name: 'sessionId',
+    collectionName: 'sessions',
+    initial: {
+      test: 'test'
+    }
   }
 })
