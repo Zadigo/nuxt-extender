@@ -9,5 +9,5 @@
 </template>
 
 <script setup lang="ts">
-const { currentData,isSyncing } = useSession<{ test: string }>()
+const { currentData, isSyncing } = useSession<{ test: string }>()
 </script>

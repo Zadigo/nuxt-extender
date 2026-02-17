@@ -5,6 +5,6 @@
 </template>
 
 <script setup lang="ts">
-const { create } = useCreateSession({ name: 'sessionId', collectionName: 'sessions', data: { test: 'test' } })
+const { create } = useCreateSession()
 await create()
 </script>
