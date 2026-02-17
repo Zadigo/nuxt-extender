@@ -14,7 +14,7 @@ type SuccessCallbacks<T extends () => unknown> = T extends () => infer R ? R : n
  * `useSession` to manage the session data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<T extends Record<string, unknown>, F extends SuccessCallbacks<() => unknown>>(defaultData: T) {
+export function useCreateSession<T extends Record<string, unknown> = Record<string, unknown>>(defaultData: T) {
   if (import.meta.server) {
     return {
       create: async () => { }
