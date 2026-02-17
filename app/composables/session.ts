@@ -1,8 +1,7 @@
 import { promiseTimeout } from '@vueuse/core'
 import { addDoc, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { useDocument, useFirestore } from 'vuefire'
-import type { MaybeEmpty, Nullable, SessionData, Undefineable } from '~/types'
-
+import type { MaybeEmpty, Nullable, SessionData } from '~/types'
 
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
@@ -12,7 +11,7 @@ import type { MaybeEmpty, Nullable, SessionData, Undefineable } from '~/types'
  * @param options - The options to initialize the session with. This includes the name of the session and the default data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<D extends SessionData = SessionData>() {
+export function useCreateSession() {
   if (import.meta.server) {
     return {
       create: async () => { }
@@ -22,7 +21,11 @@ export function useCreateSession<D extends SessionData = SessionData>() {
   const appConfig = useAppConfig()
 
   const fireStore = useFirestore()
-  const sessionId = useSessionStorage<Nullable<string>>(appConfig.sessions.name, null)
+  const sessionId = useCookie<Nullable<string>>(appConfig.sessions.name, {
+    sameSite: 'strict',
+    secure: true,
+    maxAge: 60 * 60 * 72 // 3 days
+  })
 
   async function create() {
     if (!isDefined(sessionId)) {
@@ -50,12 +53,13 @@ export function useCreateSession<D extends SessionData = SessionData>() {
 }
 
 /**
- * This composable manages the blindtest session. It handles creating,
- * retrieving, updating, and deleting the session data in Firestore. A session
- * can be considered as a game instance where players can join and participate
- * in a blindtest
+ * THis composable manaages the session state and synchronization with Firestore. It relies on the session 
+ * ID being set in session storage, which is typically done by the `useCreateSession` composable. It provides 
+ * reactive references for the current session data, loading and syncing states, and any errors that may occur during 
+ * synchronization. It also provides methods to reset, remove, and refresh the session data.
+ * @param options - The options to initialize the session with. This includes the name of the session and the default data.
  */
-export const useSession = createGlobalState(<T extends SessionData = SessionData>(defaultData: T, sessionIdName: Undefineable<string> = undefined) => {
+export const useSession = createGlobalState(<T extends { [key: string]: unknown }>() => {
   const error = ref<Nullable<string>>(null)
   const isSyncing = ref(false)
   const isLoading = ref(false)
@@ -78,16 +82,15 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
   }
 
   const appConfig = useAppConfig()
-  console.log('Using session ID name:', appConfig.sessions.name)
 
-  const sessionId = useSessionStorage<Nullable<string>>(appConfig.sessions.name, null)
+  const sessionId = useCookie<Nullable<string>>(appConfig.sessions.name)
   const hasExistingSession = computed(() => isDefined(sessionId))
 
   const firestore = useFirestore()
 
   const docRef = computed(() => {
-    if (!sessionId.value) return null
-    return doc(firestore, 'blindtests', sessionId.value)
+    if (!isDefined(sessionId)) return null
+    return doc(firestore, appConfig.sessions.collectionName, sessionId.value)
   })
 
   const _currentData = computed(() => {
@@ -96,14 +99,14 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
   })
 
   watch(() => _currentData.value?.value, (newValue) => {
-    if (isDefined(newValue)) {
+    if (isDefined(newValue) && !isDefined(currentData)) {
       currentData.value = newValue
       isInitialSync.value = false
     }
   })
 
   watchDebounced(currentData, async (newValue) => {
-    if (!isDefined(docRef) || !isDefined(docRef) || !isDefined(sessionId) || isInitialSync.value || !isDefined(newValue)) return
+    if (!isDefined(docRef) || !isDefined(sessionId) || isInitialSync.value || !isDefined(newValue)) return
 
     try {
       isSyncing.value = true
@@ -111,6 +114,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
     } catch (e) {
       error.value = (e as Error).message
     } finally {
+      await promiseTimeout(1000)
       isSyncing.value = false
     }
   }, {
@@ -127,7 +131,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
 
     try {
       isLoading.value = true
-      await updateDoc(docRef.value, { ...defaultData })
+      await updateDoc(docRef.value, { ...appConfig.sessions.initial })
     } catch (e) {
       error.value = (e as Error).message
     } finally {
@@ -155,10 +159,11 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
   }
 
   async function verify(): Promise<boolean> {
-    if (!docRef.value) return false
+    if (!isDefined(docRef)) return false
 
     try {
       const snapshot = await getDoc(docRef.value)
+
       if (!snapshot.exists()) {
         console.warn(`Session ${sessionId.value} does not exist in Firestore`)
         sessionId.value = null
@@ -195,11 +200,11 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
   }
 
   // Verify session exists on mount (if there's a session ID)
-  tryOnMounted(async () => {
-    if (sessionId.value) {
-      await verify()
-    }
-  })
+  // tryOnMounted(async () => {
+  //   if (isDefined(sessionId)) {
+  //     await verify()
+  //   }
+  // })
 
   return {
     /**
@@ -226,7 +231,9 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
      */
     sessionId: readonly(sessionId),
     /**
-     * Blindtest settings for the current session
+     * Current data for the session. This is synced with Firestore and updates in real-time. 
+     * It is initialized with the data from Firestore if it exists, or with the default data 
+     * provided in `appConfig.sessions.initial` if not.
      */
     currentData,
     /**
@@ -243,7 +250,9 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
     remove,
     /**
      * Refresh the session data from Firestore
-     * 
+     * This can be useful if you want to manually trigger a refresh of the session data, 
+     * for example after a period of inactivity or if you suspect the local data is out 
+     * of sync with Firestore.
      */
     refresh
   }
