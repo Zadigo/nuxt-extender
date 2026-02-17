@@ -5,6 +5,8 @@ import type { MaybeEmpty, Nullable } from '~/types'
 
 type SuccessCallbacks<T extends () => unknown> = T extends () => infer R ? R : never
 
+type SessionData = { [key: string]: unknown }
+
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
  * to track a user session for an application
@@ -14,7 +16,7 @@ type SuccessCallbacks<T extends () => unknown> = T extends () => infer R ? R : n
  * `useSession` to manage the session data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<T extends Record<string, unknown> = Record<string, unknown>>(defaultData: T) {
+export function useCreateSession<T extends SessionData>(defaultData: T) {
   if (import.meta.server) {
     return {
       create: async () => { }
@@ -56,6 +58,8 @@ export function useCreateSession<T extends Record<string, unknown> = Record<stri
     create
   }
 }
+
+useCreateSession<{ a: string }>({ a: 'Kendall'})
 
 /**
  * This composable manages the blindtest session. It handles creating,
