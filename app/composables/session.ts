@@ -59,8 +59,6 @@ export function useCreateSession<T extends SessionData>(defaultData: T) {
   }
 }
 
-useCreateSession<{ a: string }>({ a: 'Kendall'})
-
 /**
  * This composable manages the blindtest session. It handles creating,
  * retrieving, updating, and deleting the session data in Firestore. A session
