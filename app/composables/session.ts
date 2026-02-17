@@ -3,20 +3,24 @@ import { addDoc, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'f
 import { useDocument, useFirestore } from 'vuefire'
 import type { MaybeEmpty, Nullable } from '~/types'
 
-type SuccessCallbacks<T extends () => unknown> = T extends () => infer R ? R : never
-
 type SessionData = { [key: string]: unknown }
+
+type CreateOptions<D extends SessionData = SessionData> = {
+  name: string
+  data: D
+}
+
+const SESSION_ID_NAME = 'nuxtAppSessionName'
 
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
- * to track a user session for an application
- * @param defaultData - The default data to initialize the session with. This will be merged with any existing data if the session already exists.
- * @returns An object containing a `create` function to initialize the session in Firestore. 
- * The session ID will be stored in session storage under the key 'blindtestId' and can be accessed by other composables like 
- * `useSession` to manage the session data.
+ * to track a user session for an application. This composable should be ideally initalized
+ * before using the `useSession` composable, as it sets up the session ID in session storage which is used 
+ * by `useSession` to sync with the correct Firestore document.
+ * @param options - The options to initialize the session with. This includes the name of the session and the default data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<T extends SessionData = SessionData>(defaultData: T) {
+export function useCreateSession<D extends SessionData = SessionData>(options: CreateOptions<D>) {
   if (import.meta.server) {
     return {
       create: async () => { }
@@ -24,37 +28,34 @@ export function useCreateSession<T extends SessionData = SessionData>(defaultDat
   }
 
   const fireStore = useFirestore()
-  const sessionId = useSessionStorage<Nullable<string>>('blindtestId', null)
+  const sessionIdName = useSessionStorage<string>(SESSION_ID_NAME, options.name)
+  const sessionId = useSessionStorage<Nullable<string>>(options.name, null)
 
   async function create() {
     if (!isDefined(sessionId)) {
       try {
-        const collectionRef = collection(fireStore, 'blindtests')
-        const data = await addDoc(collectionRef, { ...defaultData })
+        const collectionRef = collection(fireStore, options.name)
+        const data = await addDoc(collectionRef, { ...options.data })
         await promiseTimeout(800) // Wait a bit to ensure Firestore is ready
-
+        
         sessionId.value = data.id
-
-        // if (successCallbacks) {
-        //   useAsyncQueue(successCallbacks?.map((callback) => {
-        //     if (callback instanceof Function) {
-        //       return async () => {
-        //         try {
-        //           await callback()
-        //         } catch (error) {
-        //           console.error('Error executing success callback:', error)
-        //         }
-        //       }
-        //     }
-        //   }))
-        // }
       } catch (error) {
-        throw new Error('Error creating blindtest session:' + error)
+        throw new Error(`Error creating ${options.name} session:` + error)
       }
     }
   }
 
   return {
+    /**
+     * The name of the session, which is also used as the 
+     * key in session storage to store the session ID.
+     */
+    sessionIdName,
+    /**
+     * Creates a new session in Firestore with the provided options. 
+     * The session ID will be stored in session storage under the key provided in
+     * `options.name`.
+     */
     create
   }
 }
@@ -70,7 +71,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
   const isSyncing = ref(false)
   const isLoading = ref(false)
   const isInitialSync = ref(true)
-  const currentSettings = ref<MaybeEmpty<T>>()
+  const currentData = ref<MaybeEmpty<T>>()
 
   if (import.meta.server) {
     return {
@@ -79,15 +80,16 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
       isLoading,
       docRef: null,
       sessionId: null,
-      currentSettings,
+      currentData,
       hasExistingSession: ref(false),
       reset: async () => { },
       remove: async () => { },
-      // create: async () => { }
+      refresh: async () => { }
     }
   }
 
-  const sessionId = useSessionStorage<Nullable<string>>(sessionIdName, null)
+  const _sessionIdName = useSessionStorage<string>(SESSION_ID_NAME, sessionIdName)
+  const sessionId = useSessionStorage<Nullable<string>>(_sessionIdName.value, null)
   const hasExistingSession = computed(() => isDefined(sessionId))
 
   const firestore = useFirestore()
@@ -97,19 +99,19 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
     return doc(firestore, 'blindtests', sessionId.value)
   })
 
-  const _currentSettings = computed(() => {
+  const _currentData = computed(() => {
     if (!docRef.value) return null
     return useDocument<T>(docRef.value)
   })
 
-  watch(() => _currentSettings.value?.value, (newValue) => {
+  watch(() => _currentData.value?.value, (newValue) => {
     if (isDefined(newValue)) {
-      currentSettings.value = newValue
+      currentData.value = newValue
       isInitialSync.value = false
     }
   })
 
-  watchDebounced(currentSettings, async (newValue) => {
+  watchDebounced(currentData, async (newValue) => {
     if (!isDefined(docRef) || !isDefined(docRef) || !isDefined(sessionId) || isInitialSync.value || !isDefined(newValue)) return
 
     try {
@@ -152,7 +154,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
       isLoading.value = true
       await deleteDoc(docRef.value)
       sessionId.value = null
-      currentSettings.value = undefined
+      currentData.value = undefined
       error.value = null
     } catch (e) {
       error.value = (e as Error).message
@@ -187,7 +189,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
       const snapshot = await getDoc(docRef.value)
 
       if (snapshot.exists()) {
-        currentSettings.value = snapshot.data() as MaybeEmpty<T>
+        currentData.value = snapshot.data() as MaybeEmpty<T>
         error.value = null
       } else {
         console.warn('Session does not exist')
@@ -235,7 +237,7 @@ export const useSession = createGlobalState(<T extends SessionData = SessionData
     /**
      * Blindtest settings for the current session
      */
-    currentSettings,
+    currentData,
     /**
      * Whether there is an existing session
      */
