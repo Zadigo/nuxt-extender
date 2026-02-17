@@ -16,7 +16,7 @@ type SessionData = { [key: string]: unknown }
  * `useSession` to manage the session data.
  */
 // successCallbacks?: F[]
-export function useCreateSession<T extends SessionData>(defaultData: T) {
+export function useCreateSession<T extends SessionData = SessionData>(defaultData: T) {
   if (import.meta.server) {
     return {
       create: async () => { }
@@ -65,7 +65,7 @@ export function useCreateSession<T extends SessionData>(defaultData: T) {
  * can be considered as a game instance where players can join and participate
  * in a blindtest
  */
-export const useSession = createGlobalState(<T extends Record<string, unknown>>(defaultData: T, sessionIdName: string = 'sessionId') => {
+export const useSession = createGlobalState(<T extends SessionData = SessionData>(defaultData: T, sessionIdName: string = 'sessionId') => {
   const error = ref<Nullable<string>>(null)
   const isSyncing = ref(false)
   const isLoading = ref(false)
