@@ -10,3 +10,12 @@ export function createElementId(base: string, parts: Array<Undefineable<string |
   const _parts = parts ? parts.map(p => (p || '').toString().replace(' ', '-')).filter(Boolean).join(join) : ''
   return `${base}${(join + _parts).trim()}`
 }
+
+/**
+ * Generate a random delay for motion animations, up to a specified maximum.
+ * This can be used to create a staggered effect when multiple elements are animated.
+ * @param maxDelay The maximum delay in milliseconds
+ */
+export function randomMotionDelays(maxDelay = 300) {
+  return Math.floor(Math.random() * maxDelay)
+}

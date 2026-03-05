@@ -30,7 +30,7 @@ export interface BusinessDetails {
   siren: string
   siret: string
   numberoTVA: Nullable<string>
-  creationDate: string
+  creationDate: Nullable<string>
   alternateName: string
   description: string
   logo: string
@@ -73,56 +73,50 @@ const businessDetails =  {
   alternateName: 'Nuxt Extender',
   description: 'A Nuxt module to extend your application with powerful features and composables.',
   logo: 'https://nuxt.com/favicon.ico',
-  siren: '123456789',
-  siret: '12345678900000',
-  numberoTVA: 'FR123456789',
-  creationDate: '2023-01-01',
-  sameAs: [
-    'https://www.facebook.com/nuxtjs',
-    'https://twitter.com/nuxt_js',
-    'https://www.linkedin.com/company/nuxtjs'
-  ],
-  image: [
-    'https://nuxt.com/images/nuxt-og-image.png'
-  ],
-  rcs: '123456789',
+  siren: null,
+  siret: null,
+  numberoTVA: null,
+  creationDate: null,
+  sameAs: [],
+  image: [],
+  rcs: null,
   address: {
-    street: '123 Nuxt Street',
-    postalCode: '75000',
-    city: 'Nuxt City',
+    street: '',
+    postalCode: '',
+    city: '',
     lat: null,
     lng: null
   },
   priceRange: '$$',
   foundingDate: '2020-01-01',
-  foundingLocation: 'Nuxt City',
-  founderImage: 'https://nuxt.com/images/nuxt-founder.png',
-  shareCapital: '1000000',
-  founder: 'Nuxt Team',
-  founderDescription: 'The team behind Nuxt.js, dedicated to building powerful tools for developers.',
-  founderKnowsAbout: ['JavaScript', 'Vue.js', 'Nuxt.js', 'Web Development'],
-  webContentManager: 'Nuxt Team',
-  publishingDirector: 'Nuxt Team',
-  editorInChief: 'Nuxt Team',
+  foundingLocation: '',
+  founderImage: '',
+  shareCapital: '',
+  founder: '',
+  founderDescription: '',
+  founderKnowsAbout: [],
+  webContentManager: '',
+  publishingDirector: '',
+  editorInChief: '',
   websiteProvider: {
     legalName: 'Nuxt Hosting Inc.',
-    url: 'https://nuxt.com/hosting'
+    url: ''
   },
   cloudProvider: {
     legalName: 'Nuxt Cloud Inc.',
-    url: 'https://nuxt.com/cloud',
-    description: 'Cloud hosting and services for Nuxt applications.',
-    address: '456 Nuxt Cloud Avenue, Nuxt City, Nuxt Country',
-    rcs: '987654321'
+    url: '',
+    description: '',
+    address: '',
+    rcs: null
   },
   contact: {
-    telephone: '+1234567890',
-    email: 'info@nuxt.com',
-    address: '123 Nuxt Street, Nuxt City, Nuxt Country'
+    telephone: '',
+    email: '',
+    address: ''
   },
   socials: {
     instagram: {
-      url: 'https://www.instagram.com/nuxtjs',
+      url: '',
       handle: '@nuxtjs'
     },
     facebook: {
@@ -130,8 +124,8 @@ const businessDetails =  {
       handle: '@nuxtjs'
     },
     twitter: {
-      url: 'https://twitter.com/nuxt_js',
-      handle: '@nuxt_js'
+      url: 'https://twitter.com/nuxtjs',
+      handle: '@nuxtjs'
     },
     linkedin: {
       url: 'https://www.linkedin.com/company/nuxtjs',
@@ -141,10 +135,23 @@ const businessDetails =  {
 }
 
 /**
+ * A helper function to define business details with type safety. It allows you to provide partial details, 
+ * which will be merged with the default business details. This ensures that all required fields are present 
+ * while allowing for flexibility in defining only the necessary details.
+ * @param details - Partial business details to override the default values. You can provide only the fields you want to customize, and the rest will be filled in with defaults.
+ */
+export function defineBusinessDetails(details: Partial<BusinessDetails>) {
+  return {
+    ...businessDetails,
+    ...details
+  }
+}
+
+/**
  * A composable to access business details throughout the application. It provides a `get` function 
  * to retrieve specific details by key, ensuring type safety and consistency across the app.
  */
-export async function useBusinessDetails() {
+export function useBusinessDetails() {
   function get<K extends BusinessDetailsKeys>(key: K): BusinessDetailsKeyValue[K] {
     return businessDetails[key]
   }

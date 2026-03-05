@@ -17,6 +17,14 @@ export default defineNuxtConfig({
     }
   },
 
+  runtimeConfig: {
+    public: {
+      businessDetails: {
+
+      }
+    }
+  },
+
   typescript: {
     tsConfig: {
       include: [
