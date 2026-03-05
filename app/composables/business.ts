@@ -37,8 +37,14 @@ export interface BusinessDetails {
   sameAs: string[]
   image: string[]
   rcs: string
-  address: string
-  priceRange: '$' | '$$' | '$$$'
+  address: {
+    street: string
+    postalCode: string
+    city: string
+    lat: number | null
+    lng: number | null
+  }
+  priceRange: '$' | '$$' | '$$$' | (string & {})
   foundingDate: string
   foundingLocation: string
   founderImage: Nullable<string>
@@ -61,18 +67,86 @@ type BusinessDetailsKeyValue = {
   [K in BusinessDetailsKeys]: BusinessDetails[K]
 }
 
+const businessDetails =  {
+  name: 'Nuxt Extender',
+  legalName: 'Nuxt Extender',
+  alternateName: 'Nuxt Extender',
+  description: 'A Nuxt module to extend your application with powerful features and composables.',
+  logo: 'https://nuxt.com/favicon.ico',
+  siren: '123456789',
+  siret: '12345678900000',
+  numberoTVA: 'FR123456789',
+  creationDate: '2023-01-01',
+  sameAs: [
+    'https://www.facebook.com/nuxtjs',
+    'https://twitter.com/nuxt_js',
+    'https://www.linkedin.com/company/nuxtjs'
+  ],
+  image: [
+    'https://nuxt.com/images/nuxt-og-image.png'
+  ],
+  rcs: '123456789',
+  address: {
+    street: '123 Nuxt Street',
+    postalCode: '75000',
+    city: 'Nuxt City',
+    lat: null,
+    lng: null
+  },
+  priceRange: '$$',
+  foundingDate: '2020-01-01',
+  foundingLocation: 'Nuxt City',
+  founderImage: 'https://nuxt.com/images/nuxt-founder.png',
+  shareCapital: '1000000',
+  founder: 'Nuxt Team',
+  founderDescription: 'The team behind Nuxt.js, dedicated to building powerful tools for developers.',
+  founderKnowsAbout: ['JavaScript', 'Vue.js', 'Nuxt.js', 'Web Development'],
+  webContentManager: 'Nuxt Team',
+  publishingDirector: 'Nuxt Team',
+  editorInChief: 'Nuxt Team',
+  websiteProvider: {
+    legalName: 'Nuxt Hosting Inc.',
+    url: 'https://nuxt.com/hosting'
+  },
+  cloudProvider: {
+    legalName: 'Nuxt Cloud Inc.',
+    url: 'https://nuxt.com/cloud',
+    description: 'Cloud hosting and services for Nuxt applications.',
+    address: '456 Nuxt Cloud Avenue, Nuxt City, Nuxt Country',
+    rcs: '987654321'
+  },
+  contact: {
+    telephone: '+1234567890',
+    email: 'info@nuxt.com',
+    address: '123 Nuxt Street, Nuxt City, Nuxt Country'
+  },
+  socials: {
+    instagram: {
+      url: 'https://www.instagram.com/nuxtjs',
+      handle: '@nuxtjs'
+    },
+    facebook: {
+      url: 'https://www.facebook.com/nuxtjs',
+      handle: '@nuxtjs'
+    },
+    twitter: {
+      url: 'https://twitter.com/nuxt_js',
+      handle: '@nuxt_js'
+    },
+    linkedin: {
+      url: 'https://www.linkedin.com/company/nuxtjs',
+      handle: '@nuxtjs'
+    }
+  }
+}
+
 /**
  * A composable to access business details throughout the application. It provides a `get` function 
  * to retrieve specific details by key, ensuring type safety and consistency across the app.
  */
 export async function useBusinessDetails() {
-  const businessDetails = computed(() => {
-    const appConfig = useAppConfig()
-    return appConfig.business as BusinessDetails
-  })
-
   function get<K extends BusinessDetailsKeys>(key: K): BusinessDetailsKeyValue[K] {
-    return businessDetails.value[key]
+    return businessDetails[key]
   }
 
   const reactiveGet = reactify(get)
@@ -96,9 +170,15 @@ export async function useBusinessDetails() {
     return icons[platform]
   }
 
+  const address = computed(() => {
+    const address = get('address')
+    return `${address.street}, ${address.postalCode} ${address.city}`
+  })
+
   return {
     businessDetails: readonly(businessDetails),
-    activeSocials,
+    activeSocials: readonly(activeSocials),
+    address: readonly(address),
     get,
     reactiveGet,
     getSocial,

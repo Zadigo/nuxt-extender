@@ -1,7 +1,15 @@
 import { promiseTimeout } from '@vueuse/core'
 import { addDoc, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { useDocument, useFirestore } from 'vuefire'
-import type { MaybeEmpty, Nullable, SessionData } from '~/types'
+import type { CreateSessonOptions, MaybeEmpty, Nullable } from '~/types'
+
+export const sessions: CreateSessonOptions = {
+  name: 'sessionId',
+  collectionName: 'sessions',
+  initial: {
+    test: 'test'
+  }
+}
 
 /**
  * Composable used to declare a new session in Firestore. This is typically used when wanting
@@ -18,10 +26,8 @@ export function useCreateSession() {
     }
   }
 
-  const appConfig = useAppConfig()
-
   const fireStore = useFirestore()
-  const sessionId = useCookie<Nullable<string>>(appConfig.sessions.name, {
+  const sessionId = useCookie<Nullable<string>>(sessions.name, {
     sameSite: 'strict',
     secure: true,
     maxAge: 60 * 60 * 72 // 3 days
@@ -30,14 +36,14 @@ export function useCreateSession() {
   async function create() {
     if (!isDefined(sessionId)) {
       try {
-        const collectionRef = collection(fireStore, appConfig.sessions.collectionName)
+        const collectionRef = collection(fireStore, sessions.collectionName)
         
-        const data = await addDoc(collectionRef, { ...appConfig.sessions.initial })
+        const data = await addDoc(collectionRef, { ...sessions.initial })
         await promiseTimeout(800) // Wait a bit to ensure Firestore is ready
         
         sessionId.value = data.id
       } catch (error) {
-        throw new Error(`Error creating ${appConfig.sessions.name} session:` + error)
+        throw new Error(`Error creating ${sessions.name} session:` + error)
       }
     }
   }
@@ -46,7 +52,7 @@ export function useCreateSession() {
     /**
      * Creates a new session in Firestore with the provided options. 
      * The session ID will be stored in session storage under the key provided in
-     * `appConfig.sessions.name`.
+     * `sessions.name`.
      */
     create
   }
@@ -81,16 +87,14 @@ export const useSession = createGlobalState(<T extends { [key: string]: unknown 
     }
   }
 
-  const appConfig = useAppConfig()
-
-  const sessionId = useCookie<Nullable<string>>(appConfig.sessions.name)
+  const sessionId = useCookie<Nullable<string>>(sessions.name)
   const hasExistingSession = computed(() => isDefined(sessionId))
 
   const firestore = useFirestore()
 
   const docRef = computed(() => {
     if (!isDefined(sessionId)) return null
-    return doc(firestore, appConfig.sessions.collectionName, sessionId.value)
+    return doc(firestore, sessions.collectionName, sessionId.value)
   })
 
   const _currentData = computed(() => {
@@ -131,7 +135,7 @@ export const useSession = createGlobalState(<T extends { [key: string]: unknown 
 
     try {
       isLoading.value = true
-      await updateDoc(docRef.value, { ...appConfig.sessions.initial })
+      await updateDoc(docRef.value, { ...sessions.initial })
     } catch (e) {
       error.value = (e as Error).message
     } finally {
